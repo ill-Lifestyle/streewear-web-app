@@ -12,20 +12,17 @@ os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        # Get the quote from the form
+        # Get text and uploaded image from form
         quote = request.form.get("quote", "Your Text Here")
-
-        # Handle file upload
         file = request.files.get("image")
         image_path = None
         if file:
             image_path = os.path.join(UPLOAD_FOLDER, file.filename)
             file.save(image_path)
 
-        # Create the streetwear design
+        # Create the design
         output_path = os.path.join(OUTPUT_FOLDER, "streetwear_mockup.jpg")
         create_streetwear_design(image_path, quote, output_path)
-
         return send_file(output_path, mimetype="image/jpeg", as_attachment=True)
 
     return render_template("index.html")
@@ -35,6 +32,7 @@ def create_streetwear_design(image_path=None, quote="Your Text Here", output_nam
     canvas = Image.new("RGB", (canvas_width, canvas_height), "white")
     draw = ImageDraw.Draw(canvas)
 
+    # Add image if uploaded
     if image_path and os.path.exists(image_path):
         input_image = Image.open(image_path)
         input_image.thumbnail((800, 600))
@@ -42,6 +40,7 @@ def create_streetwear_design(image_path=None, quote="Your Text Here", output_nam
         img_y = 200
         canvas.paste(input_image, (img_x, img_y))
 
+    # Add text
     font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
     try:
         font = ImageFont.truetype(font_path, 40)
@@ -56,7 +55,6 @@ def create_streetwear_design(image_path=None, quote="Your Text Here", output_nam
     draw.text((quote_x, quote_y), quote, fill="black", font=font)
 
     canvas.save(output_name)
-
 
 if __name__ == "__main__":
     app.run(debug=True)
