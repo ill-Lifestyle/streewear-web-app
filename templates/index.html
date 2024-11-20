@@ -24,10 +24,9 @@
         </select><br>
         <label for="font">Choose Font:</label><br>
         <select name="font" id="font">
-            <option value="DejaVuSans-Bold.ttf">Bold (DejaVu Sans)</option>
-            <option value="DejaVuSans.ttf">Regular (DejaVu Sans)</option>
-            <option value="DejaVuSerif-Bold.ttf">Serif Bold (DejaVu Serif)</option>
-            <option value="DejaVuSerif.ttf">Serif Regular (DejaVu Serif)</option>
+            {% for font in fonts %}
+            <option value="{{ font }}">{{ font.split('.')[0] }}</option>
+            {% endfor %}
         </select><br>
         <input type="file" name="image" accept="image/*"><br>
         <button type="submit">Create Design</button>

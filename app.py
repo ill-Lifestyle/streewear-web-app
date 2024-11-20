@@ -1,21 +1,22 @@
 
 from flask import Flask, request, render_template, send_file
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 import os
 
 app = Flask(__name__)
 UPLOAD_FOLDER = "./uploads"
 OUTPUT_FOLDER = "./outputs"
+FONTS_FOLDER = "./fonts"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        # Get text, color, font, and uploaded image from form
+        # Get text, color, font, layout, enhancement, and uploaded image from form
         quote = request.form.get("quote", "Your Text Here")
         text_color = request.form.get("color", "black")
-        font_choice = request.form.get("font", "DejaVuSans-Bold.ttf")
+        font_choice = request.form.get("font", "Streetwear-Regular.ttf")
         file = request.files.get("image")
         image_path = None
         if file:
@@ -27,9 +28,10 @@ def index():
         create_streetwear_design(image_path, quote, output_path, text_color, font_choice)
         return send_file(output_path, mimetype="image/png", as_attachment=True)
 
-    return render_template("index.html")
+    return render_template("index.html", fonts=os.listdir(FONTS_FOLDER))
 
-def create_streetwear_design(image_path=None, quote="Your Text Here", output_name="streetwear_mockup.png", text_color="black", font_choice="DejaVuSans-Bold.ttf"):
+def create_streetwear_design(image_path=None, quote="Your Text Here", output_name="streetwear_mockup.png", 
+                             text_color="black", font_choice="Streetwear-Regular.ttf"):
     canvas_width, canvas_height = 1000, 1200
     canvas = Image.new("RGBA", (canvas_width, canvas_height), (255, 255, 255, 0))  # Transparent background
     draw = ImageDraw.Draw(canvas)
@@ -43,7 +45,7 @@ def create_streetwear_design(image_path=None, quote="Your Text Here", output_nam
         canvas.paste(input_image, (img_x, img_y), input_image)
 
     # Add text
-    font_path = f"/usr/share/fonts/truetype/dejavu/{font_choice}"
+    font_path = os.path.join(FONTS_FOLDER, font_choice)
     try:
         font = ImageFont.truetype(font_path, 40)
     except:
@@ -53,7 +55,7 @@ def create_streetwear_design(image_path=None, quote="Your Text Here", output_nam
     quote_width = text_bbox[2] - text_bbox[0]
     quote_height = text_bbox[3] - text_bbox[1]
     quote_x = (canvas_width - quote_width) // 2
-    quote_y = 850 if image_path else (canvas_height - quote_height) // 2
+    quote_y = 850
     draw.text((quote_x, quote_y), quote, fill=text_color, font=font)
 
     canvas.save(output_name, "PNG")
