@@ -12,8 +12,10 @@ os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        # Get text and uploaded image from form
+        # Get text, color, font, and uploaded image from form
         quote = request.form.get("quote", "Your Text Here")
+        text_color = request.form.get("color", "black")
+        font_choice = request.form.get("font", "DejaVuSans-Bold.ttf")
         file = request.files.get("image")
         image_path = None
         if file:
@@ -21,27 +23,27 @@ def index():
             file.save(image_path)
 
         # Create the design
-        output_path = os.path.join(OUTPUT_FOLDER, "streetwear_mockup.jpg")
-        create_streetwear_design(image_path, quote, output_path)
-        return send_file(output_path, mimetype="image/jpeg", as_attachment=True)
+        output_path = os.path.join(OUTPUT_FOLDER, "streetwear_mockup.png")
+        create_streetwear_design(image_path, quote, output_path, text_color, font_choice)
+        return send_file(output_path, mimetype="image/png", as_attachment=True)
 
     return render_template("index.html")
 
-def create_streetwear_design(image_path=None, quote="Your Text Here", output_name="streetwear_mockup.jpg"):
+def create_streetwear_design(image_path=None, quote="Your Text Here", output_name="streetwear_mockup.png", text_color="black", font_choice="DejaVuSans-Bold.ttf"):
     canvas_width, canvas_height = 1000, 1200
-    canvas = Image.new("RGB", (canvas_width, canvas_height), "white")
+    canvas = Image.new("RGBA", (canvas_width, canvas_height), (255, 255, 255, 0))  # Transparent background
     draw = ImageDraw.Draw(canvas)
 
     # Add image if uploaded
     if image_path and os.path.exists(image_path):
-        input_image = Image.open(image_path)
+        input_image = Image.open(image_path).convert("RGBA")
         input_image.thumbnail((800, 600))
         img_x = (canvas_width - input_image.width) // 2
         img_y = 200
-        canvas.paste(input_image, (img_x, img_y))
+        canvas.paste(input_image, (img_x, img_y), input_image)
 
     # Add text
-    font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+    font_path = f"/usr/share/fonts/truetype/dejavu/{font_choice}"
     try:
         font = ImageFont.truetype(font_path, 40)
     except:
@@ -52,9 +54,9 @@ def create_streetwear_design(image_path=None, quote="Your Text Here", output_nam
     quote_height = text_bbox[3] - text_bbox[1]
     quote_x = (canvas_width - quote_width) // 2
     quote_y = 850 if image_path else (canvas_height - quote_height) // 2
-    draw.text((quote_x, quote_y), quote, fill="black", font=font)
+    draw.text((quote_x, quote_y), quote, fill=text_color, font=font)
 
-    canvas.save(output_name)
+    canvas.save(output_name, "PNG")
 
 if __name__ == "__main__":
     app.run(debug=True)
