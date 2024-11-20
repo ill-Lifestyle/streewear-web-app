@@ -48,12 +48,15 @@ def create_streetwear_design(image_path=None, quote="Your Text Here", output_nam
     except:
         font = ImageFont.load_default()
 
-    quote_width, quote_height = draw.textsize(quote, font=font)
+    text_bbox = draw.textbbox((0, 0), quote, font=font)
+    quote_width = text_bbox[2] - text_bbox[0]
+    quote_height = text_bbox[3] - text_bbox[1]
     quote_x = (canvas_width - quote_width) // 2
     quote_y = 850 if image_path else (canvas_height - quote_height) // 2
     draw.text((quote_x, quote_y), quote, fill="black", font=font)
 
     canvas.save(output_name)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
