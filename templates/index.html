@@ -28,6 +28,12 @@
             <option value="{{ font }}">{{ font.split('.')[0] }}</option>
             {% endfor %}
         </select><br>
+        <label for="position">Choose Text Position:</label><br>
+        <select name="position" id="position">
+            <option value="above">Above</option>
+            <option value="below">Below</option>
+            <option value="around">Around</option>
+        </select><br>
         <input type="file" name="image" accept="image/*"><br>
         <button type="submit">Create Design</button>
     </form>
