@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Streetwear Design Maker</title>
+    <title>Design Refinement App</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
         form { margin: 20px auto; }
@@ -12,7 +12,7 @@
     </style>
 </head>
 <body>
-    <h1>Streetwear Design Maker</h1>
+    <h1>Design Refinement App</h1>
     <form method="POST" enctype="multipart/form-data">
         <input type="text" name="quote" placeholder="Enter your quote" required><br>
         <label for="color">Choose Text Color:</label><br>
@@ -28,14 +28,8 @@
             <option value="{{ font }}">{{ font.split('.')[0] }}</option>
             {% endfor %}
         </select><br>
-        <label for="position">Choose Text Position:</label><br>
-        <select name="position" id="position">
-            <option value="above">Above</option>
-            <option value="below">Below</option>
-            <option value="around">Around</option>
-        </select><br>
         <input type="file" name="image" accept="image/*"><br>
-        <button type="submit">Create Design</button>
+        <button type="submit">Refine Design</button>
     </form>
 </body>
 </html>
