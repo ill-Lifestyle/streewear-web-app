@@ -1,5 +1,5 @@
 
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, render_template, jsonify, send_file
 from PIL import Image, ImageDraw, ImageFont
 import os
 from io import BytesIO
@@ -26,6 +26,9 @@ def preview():
             image_path = os.path.join(UPLOAD_FOLDER, file.filename)
             file.save(image_path)
 
+        # Debugging log
+        print(f"Image uploaded to: {image_path}")
+
         # Create canvas
         canvas_width, canvas_height = 1000, 1200
         canvas = Image.new("RGBA", (canvas_width, canvas_height), (255, 255, 255, 0))
@@ -38,6 +41,8 @@ def preview():
             img_x = (canvas_width - uploaded_image.width) // 2
             img_y = 200
             canvas.paste(uploaded_image, (img_x, img_y), uploaded_image)
+        else:
+            print("No valid image found.")
 
         # Add text
         font_path = os.path.join(FONTS_FOLDER, font_choice)
@@ -56,7 +61,7 @@ def preview():
         img_io = BytesIO()
         canvas.save(img_io, "PNG")
         img_io.seek(0)
-        return jsonify({"image_data": img_io.getvalue().hex()})
+        return send_file(img_io, mimetype="image/png")
     except Exception as e:
         return jsonify({"error": str(e)})
 
