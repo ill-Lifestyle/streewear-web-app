@@ -4,32 +4,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Design Refinement App</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        form { margin: 20px auto; }
-        input, button, select { margin: 10px; padding: 10px; width: 80%; max-width: 300px; }
-    </style>
+    <title>Design Preview</title>
+    <script>
+        async function updatePreview() {
+            const formData = new FormData(document.getElementById("designForm"));
+            const response = await fetch("/preview", {
+                method: "POST",
+                body: formData,
+            });
+            const result = await response.json();
+            if (result.image_data) {
+                document.getElementById("preview").src = "data:image/png;base64," + result.image_data;
+            } else {
+                alert(result.error || "Something went wrong");
+            }
+        }
+    </script>
 </head>
 <body>
-    <h1>Design Refinement App</h1>
-    <form method="POST" enctype="multipart/form-data">
-        <input type="text" name="quote" placeholder="Enter your quote" required><br>
-        <label for="color">Choose Text Color:</label><br>
+    <h1>Real-Time Design Preview</h1>
+    <form id="designForm" oninput="updatePreview()">
+        <input type="text" name="text" placeholder="Enter your text" required><br>
+        <label for="color">Text Color:</label>
         <select name="color" id="color">
             <option value="black">Black</option>
             <option value="white">White</option>
             <option value="red">Red</option>
             <option value="blue">Blue</option>
         </select><br>
-        <label for="font">Choose Font:</label><br>
+        <label for="font">Choose Font:</label>
         <select name="font" id="font">
             {% for font in fonts %}
             <option value="{{ font }}">{{ font.split('.')[0] }}</option>
             {% endfor %}
         </select><br>
         <input type="file" name="image" accept="image/*"><br>
-        <button type="submit">Refine Design</button>
+        <button type="button" onclick="updatePreview()">Preview</button>
     </form>
+    <h2>Preview:</h2>
+    <img id="preview" alt="Your design preview will appear here" style="max-width: 100%; height: auto;">
 </body>
 </html>
