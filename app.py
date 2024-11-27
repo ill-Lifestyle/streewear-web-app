@@ -1,67 +1,57 @@
 
 from flask import Flask, request, render_template, jsonify, send_file
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageChops
 import os
 from io import BytesIO
 
 app = Flask(__name__)
 UPLOAD_FOLDER = "./uploads"
-FONTS_FOLDER = "./fonts"
+OUTPUT_FOLDER = "./outputs"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    return render_template("index.html", fonts=os.listdir(FONTS_FOLDER))
+    return render_template("index.html")
 
-@app.route("/preview", methods=["POST"])
-def preview():
+@app.route("/isolate", methods=["POST"])
+def isolate():
     try:
-        # Get form data
-        text = request.form.get("text", "Your Text Here")
-        text_color = request.form.get("color", "black")
-        font_choice = request.form.get("font", "Poppins-Regular.ttf")
         file = request.files.get("image")
         image_path = None
         if file:
             image_path = os.path.join(UPLOAD_FOLDER, file.filename)
             file.save(image_path)
 
-        # Debugging log
-        print(f"Image uploaded to: {image_path}")
-
-        # Create canvas
-        canvas_width, canvas_height = 1000, 1200
-        canvas = Image.new("RGBA", (canvas_width, canvas_height), (255, 255, 255, 0))
-        draw = ImageDraw.Draw(canvas)
-
-        # Add image if uploaded
         if image_path and os.path.exists(image_path):
-            uploaded_image = Image.open(image_path).convert("RGBA")
-            uploaded_image.thumbnail((800, 600))
-            img_x = (canvas_width - uploaded_image.width) // 2
-            img_y = 200
-            canvas.paste(uploaded_image, (img_x, img_y), uploaded_image)
+            image = Image.open(image_path).convert("RGBA")
+            bg = Image.new("RGBA", image.size, (255, 255, 255, 255))
+            diff = ImageChops.difference(image, bg)
+            diff = ImageChops.add(diff, diff, 2.0, -100)
+            mask = diff.convert("L").point(lambda p: p > 128 and 255)
+            isolated_image = Image.composite(image, bg, mask)
+            isolated_image = isolated_image.filter(ImageFilter.SMOOTH)
+
+            output_path = os.path.join(OUTPUT_FOLDER, "isolated_design.png")
+            isolated_image.save(output_path, "PNG")
+
+            img_io = BytesIO()
+            isolated_image.save(img_io, "PNG")
+            img_io.seek(0)
+            return send_file(img_io, mimetype="image/png")
         else:
-            print("No valid image found.")
+            return jsonify({"error": "No valid image uploaded for isolation."})
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
-        # Add text
-        font_path = os.path.join(FONTS_FOLDER, font_choice)
-        try:
-            font = ImageFont.truetype(font_path, 50)
-        except:
-            font = ImageFont.load_default()
-
-        text_bbox = draw.textbbox((0, 0), text, font=font)
-        text_width = text_bbox[2] - text_bbox[0]
-        text_x = (canvas_width - text_width) // 2
-        text_y = 850
-        draw.text((text_x, text_y), text, fill=text_color, font=font)
-
-        # Convert to bytes
-        img_io = BytesIO()
-        canvas.save(img_io, "PNG")
-        img_io.seek(0)
-        return send_file(img_io, mimetype="image/png")
+@app.route("/download_isolated", methods=["GET"])
+def download_isolated():
+    try:
+        output_path = os.path.join(OUTPUT_FOLDER, "isolated_design.png")
+        if os.path.exists(output_path):
+            return send_file(output_path, mimetype="image/png", as_attachment=True, download_name="isolated_design.png")
+        else:
+            return jsonify({"error": "No isolated design available for download."})
     except Exception as e:
         return jsonify({"error": str(e)})
 

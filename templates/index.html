@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Design Preview</title>
+    <title>Design Isolation App</title>
     <script>
-        async function updatePreview() {
-            const formData = new FormData(document.getElementById("designForm"));
-            const response = await fetch("/preview", {
+        async function isolateImage() {
+            const formData = new FormData(document.getElementById("isolateForm"));
+            const response = await fetch("/isolate", {
                 method: "POST",
                 body: formData,
             });
@@ -16,32 +16,35 @@
             if (result) {
                 document.getElementById("preview").src = URL.createObjectURL(result);
             } else {
-                alert("Something went wrong or the image could not be generated.");
+                alert("Something went wrong or the image could not be processed.");
+            }
+        }
+        async function downloadIsolated() {
+            const response = await fetch("/download_isolated");
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.style.display = "none";
+                a.href = url;
+                a.download = "isolated_design.png";
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            } else {
+                alert("No isolated design available for download.");
             }
         }
     </script>
 </head>
 <body>
-    <h1>Real-Time Design Preview</h1>
-    <form id="designForm" oninput="updatePreview()">
-        <input type="text" name="text" placeholder="Enter your text" required><br>
-        <label for="color">Text Color:</label>
-        <select name="color" id="color">
-            <option value="black">Black</option>
-            <option value="white">White</option>
-            <option value="red">Red</option>
-            <option value="blue">Blue</option>
-        </select><br>
-        <label for="font">Choose Font:</label>
-        <select name="font" id="font">
-            {% for font in fonts %}
-            <option value="{{ font }}">{{ font.split('.')[0] }}</option>
-            {% endfor %}
-        </select><br>
-        <input type="file" name="image" accept="image/*"><br>
-        <button type="button" onclick="updatePreview()">Preview</button>
+    <h1>Design Isolation App</h1>
+    <form id="isolateForm">
+        <input type="file" name="image" accept="image/*" required><br>
+        <button type="button" onclick="isolateImage()">Isolate Design</button>
     </form>
     <h2>Preview:</h2>
-    <img id="preview" alt="Your design preview will appear here" style="max-width: 100%; height: auto;">
+    <img id="preview" alt="Your isolated design preview will appear here" style="max-width: 100%; height: auto;"><br>
+    <button type="button" onclick="downloadIsolated()">Download Isolated Design</button>
 </body>
 </html>
